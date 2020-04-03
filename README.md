@@ -1,2 +1,3 @@
-# organic-trees
-Drawings of organic-looking trees
+# Trees in PostScript
+
+Programs that generate organic-looking trees in PostScript

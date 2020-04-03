@@ -1,0 +1,15 @@
+# OS generated files #
+.DS_Store
+*.swp
+*.dSYM
+
+# TeX #
+*.aux
+*.log
+*.gz
+*.dvi
+*.[0-9-]*
+
+# MetaPost #
+*.mpx
+*mpxerr.tex
