@@ -3,9 +3,12 @@
 % Generate and illustrate a random BST
 % Written by Marcel Goh on 3 April 2020
 
+0.5 setlinewidth
+
 %%% CONSTANTS/PARAMETERS
-/NUM_NODES 100 def
+/NUM_NODES 10 def
 /RAND 34243 def      % seed for RNG
+/U { 0.5 mul } def     % unit of measure
 
 % RNG helpers (Knuth Vol.2, p. 185)
 /MM 2147483647 def
@@ -76,7 +79,7 @@ RIGHT 0 -1 put
 } for
 
 % calculate Horton-Strahler number (Knuth Vol. 4, p. 485)
-/STACK NUM_NODES 2 mul array def
+/STACK NUM_NODES array def
 STACK 0 0 put
 /STACK_SIZE 1 def
 {   % postorder traversal and calculation
@@ -114,26 +117,80 @@ STACK 0 0 put
     STACK_SIZE 0 eq { exit } if
 } loop
 
-% arr label x y PRINT_ARR prints an array for debug
-/Courier findfont 10 scalefont setfont
-/PRINT_ARR {
-    moveto show (  ) show
-    /arr exch def
-    /len arr length def
-    /s 20 string def
-    0 1 len 1 sub {
-        /i exch def
-        arr i get s cvs show
-        (  ) show
-    } for
+% k V gets HS number if internal node; else returns 0
+/V { /k exch def k -1 eq { 0 } { HS k get } ifelse } def
+
+% v RECT draws the correct shape for the HS number v
+/RECT {
+    /v exch def
+    v 0 eq {
+        newpath
+            0 0 moveto
+            3 U 18 U rlineto
+            6 U neg 0 rlineto
+            0 0 lineto
+            gsave
+                1 1 1 setcolor fill
+            grestore
+        stroke
+    } {
+        /w 3 v add U def
+        /h 18 v mul U def
+        newpath
+            w 2 div neg 0 moveto
+            w 0 rlineto
+            0 h rlineto
+            w neg 0 rlineto
+            0 h neg rlineto
+            gsave
+                1 1 1 setcolor fill
+            grestore
+        stroke
+    } ifelse
 } def
 
-50 340 moveto (DEBUG: ) show DEBUG 8 string cvs show
-STACK (STACK:) 50 360 PRINT_ARR
-HS (HS:) 50 380 PRINT_ARR
-PARENT (PARENT:) 50 400 PRINT_ARR
-RIGHT (RIGHT:) 50 420 PRINT_ARR
-LEFT (LEFT:) 50 440 PRINT_ARR
-KEY (KEY:) 50 460 PRINT_ARR
+gsave
+    300 100 translate
+    4 RECT
+grestore
+gsave
+    300 100 18 4 mul U add translate
+    30 rotate
+    3 RECT
+    -60 rotate
+    0 RECT
+grestore
+
+% x y v theta DRAW_NODE puts node with (x,y) at bottom middle
+/DRAW_NODE {
+    2
+} def
+
+% FOR TESTING
+/DEBUG_PRINT {
+    % arr label x y PRINT_ARR prints an array for debug
+    /Courier findfont 10 scalefont setfont
+    /PRINT_ARR {
+        moveto show (  ) show
+        /arr exch def
+        /len arr length def
+        /s 20 string def
+        0 1 len 1 sub {
+            /i exch def
+            arr i get s cvs show
+            ( ) show
+        } for
+    } def
+
+    50 580 moveto (DEBUG: ) show DEBUG 8 string cvs show
+    STACK (STACK:) 50 600 PRINT_ARR
+    HS (HS:) 50 620 PRINT_ARR
+    PARENT (PARENT:) 50 640 PRINT_ARR
+    RIGHT (RIGHT:) 50 660 PRINT_ARR
+    LEFT (LEFT:) 50 680 PRINT_ARR
+    KEY (KEY:) 50 700 PRINT_ARR
+} def
+
+DEBUG_PRINT
 
 showpage
