@@ -1,0 +1,27 @@
+%!PS
+
+%%% CONSTANTS/PARAMETERS
+/NUM_NODES 7 def
+/RAND 2342 def      % seed for RNG
+% RNG helpers (Knuth Vol.2, p. 185)
+/MM 2147483647 def
+/AA 48271 def
+/QQ 44488 def
+/RR 3399 def
+
+% updates the value of RAND
+/NEXT_RAND {
+    % RAND = AA*(RAND % QQ) - RR*(RAND / QQ)
+    /RAND AA RAND QQ mod mul RR RAND QQ idiv mul sub def
+    RAND 0 lt {
+        /RAND RAND MM add def
+    } if
+} def
+50 { NEXT_RAND } repeat
+
+/uniform {RAND MM div NEXT_RAND} def
+
+/stk 1000 array def
+/stk_size 0 def
+
+showpage
