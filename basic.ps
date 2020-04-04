@@ -1,14 +1,17 @@
 %!PS
+%%BoundingBox: [0 0 1 1]
+% Generate and illustrate a random BST
+% Written by Marcel Goh on 3 April 2020
 
 %%% CONSTANTS/PARAMETERS
-/NUM_NODES 7 def
-/RAND 2342 def      % seed for RNG
+/NUM_NODES 100 def
+/RAND 34243 def      % seed for RNG
+
 % RNG helpers (Knuth Vol.2, p. 185)
 /MM 2147483647 def
 /AA 48271 def
 /QQ 44488 def
 /RR 3399 def
-
 % updates the value of RAND
 /NEXT_RAND {
     % RAND = AA*(RAND % QQ) - RR*(RAND / QQ)
@@ -19,9 +22,118 @@
 } def
 50 { NEXT_RAND } repeat
 
-/uniform {RAND MM div NEXT_RAND} def
+% push a new random number from [0,1) onto the stack
+/UNI {RAND MM div NEXT_RAND} def
 
-/stk 1000 array def
-/stk_size 0 def
+% fields for each node in BST
+/KEY NUM_NODES array def
+/PARENT NUM_NODES array def
+/LEFT NUM_NODES array def
+/RIGHT NUM_NODES array def
+/HS NUM_NODES array def   % Horton-Strahler
+
+% initialise root
+KEY 0 UNI put    % set KEY[root] <- new random number
+PARENT 0 -1 put  % PARENT[root] <- nil (-1 indicates nil)
+LEFT 0 -1 put    % ditto for LEFT, RIGHT
+RIGHT 0 -1 put
+
+% Test
+/BOOL NUM_NODES array def
+/DEBUG -3 def
+% End Test
+
+% insert nodes with random keys into BST
+1 1 NUM_NODES 1 sub {
+    /i exch def
+    /new_key UNI def
+    KEY i new_key put  % create new leaf node
+    LEFT i -1 put
+    RIGHT i -1 put
+
+    /curr 0 def  % travelling pointer starts at root
+    /next 0 def
+    % descend the tree
+    {
+        /go_left new_key KEY curr get lt def
+        go_left {
+            /next LEFT curr get def
+        } {
+            /next RIGHT curr get def
+        } ifelse
+        next -1 eq {
+            % new leaf inserts here
+            go_left {
+                LEFT curr i put
+            } {
+                RIGHT curr i put
+            } ifelse
+            PARENT i curr put
+            exit
+        } if
+        /curr next def
+    } loop
+} for
+
+% calculate Horton-Strahler number (Knuth Vol. 4, p. 485)
+/STACK NUM_NODES 2 mul array def
+STACK 0 0 put
+/STACK_SIZE 1 def
+{   % postorder traversal and calculation
+    % we use only one stack; if the number N on the stack is greater
+    % than NUM_NODES, it indicates that node N is to be visited
+    /STACK_SIZE STACK_SIZE 1 sub def  % pop off stack
+    /curr STACK STACK_SIZE get def
+
+    curr NUM_NODES lt {
+        /rchild RIGHT curr get def
+        /lchild LEFT curr get def
+        % push node again; next time it will be visited
+        STACK STACK_SIZE curr NUM_NODES add put
+        /STACK_SIZE STACK_SIZE 1 add def
+        % push children: they will be dealt with first
+        rchild -1 ne {
+            STACK STACK_SIZE rchild put
+            /STACK_SIZE STACK_SIZE 1 add def
+        } if
+        lchild -1 ne {
+            STACK STACK_SIZE lchild put
+            /STACK_SIZE STACK_SIZE 1 add def
+        } if
+    } {
+        % visit node
+        /curr curr NUM_NODES sub def
+        /rchild RIGHT curr get def
+        /lchild LEFT curr get def
+        /vleft lchild -1 eq { 0 } { HS lchild get } ifelse def
+        /vright rchild -1 eq { 0 } { HS rchild get } ifelse def
+        /m vleft vright gt { vleft } { vright } ifelse def
+        /b vleft vright eq { 1 } { 0 } ifelse def
+        HS curr m b add put
+    } ifelse
+    STACK_SIZE 0 eq { exit } if
+} loop
+
+% arr label x y PRINT_ARR prints an array for debug
+/Courier findfont 10 scalefont setfont
+/PRINT_ARR {
+    moveto show (  ) show
+    /arr exch def
+    /len arr length def
+    /s 20 string def
+    0 1 len 1 sub {
+        /i exch def
+        arr i get s cvs show
+        (  ) show
+    } for
+} def
+
+50 340 moveto (DEBUG: ) show DEBUG 8 string cvs show
+STACK (STACK:) 50 360 PRINT_ARR
+HS (HS:) 50 380 PRINT_ARR
+PARENT (PARENT:) 50 400 PRINT_ARR
+RIGHT (RIGHT:) 50 420 PRINT_ARR
+LEFT (LEFT:) 50 440 PRINT_ARR
+KEY (KEY:) 50 460 PRINT_ARR
 
 showpage
