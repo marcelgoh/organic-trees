@@ -1,0 +1,252 @@
+%!PS
+%%BoundingBox: [0 0 1 1]
+% General-purpose header for drawing binary trees
+%
+% USE AS FOLLOWS:
+% 1. Call INIT_PARAMS with number of nodes, RNG seed, and scale factor.
+% 2. Fill LEFT, RIGHT, PARENT arrays. (KEY is not needed.)
+% 3. Initialise XARR, YARR, and THETA for the root.
+% 4. Call RUN.
+% [DEBUG_PRINT can be used to show contents of arrays.]
+%
+% Written by Marcel Goh on 4 April 2020.
+
+0.5 setlinewidth
+
+%%% CONSTANTS/PARAMETERS (defaults)
+/NUM_NODES 938 def
+/RAND 57721566 def      % seed for RNG
+/SCALE { 0.40 mul } def     % scale factor
+
+% RNG helpers (Knuth Vol.2, p. 185)
+/MM 2147483647 def
+/AA 48271 def
+/QQ 44488 def
+/RR 3399 def
+% updates the value of RAND
+/NEXT_RAND {
+    % RAND = AA*(RAND % QQ) - RR*(RAND / QQ)
+    /RAND AA RAND QQ mod mul RR RAND QQ idiv mul sub def
+    RAND 0 lt {
+        /RAND RAND MM add def
+    } if
+} def
+50 { NEXT_RAND } repeat
+
+% seed NEW_SRAND sets a new seed and lets the RNG run for awhile
+/NEW_SRAND {
+    /RAND exch def
+    50 { NEXT_RAND } repeat
+} def
+
+% push a new random number from [0,1) onto the stack
+/UNI {RAND MM div NEXT_RAND} def
+
+% stack used for tree-traversals            -- NOT INITIALISED YET!
+/STACK 0 def
+/STACK_SIZE 0 def
+
+% value S_PUSH pushes value onto stack
+/S_PUSH {
+    /value exch def
+    STACK STACK_SIZE value put
+    /STACK_SIZE STACK_SIZE 1 add def
+} def
+
+% pops the stack
+/S_POP {
+    /STACK_SIZE STACK_SIZE 1 sub def
+    STACK STACK_SIZE get
+} def
+
+% fields for each node in tree              -- NOT INITIALISED YET!
+/KEY 0 def
+/PARENT 0 def
+/LEFT 0 def
+/RIGHT 0 def
+/HS 0 def   % Horton-Strahler
+/XARR 0 def
+/YARR 0 def
+/THETA 0 def
+
+% num_nodes seed scale INIT_PARAMS: sets parameters
+/INIT_PARAMS {
+    /s exch def /SCALE {s mul} def
+    NEW_SRAND
+    /NUM_NODES exch def
+    /STACK NUM_NODES array def
+    /STACK_SIZE 0 def
+    /KEY NUM_NODES array def
+    /PARENT NUM_NODES array def
+    /LEFT NUM_NODES array def
+    /RIGHT NUM_NODES array def
+    /HS NUM_NODES array def
+    /XARR NUM_NODES array def
+    /YARR NUM_NODES array def
+    /THETA NUM_NODES array def
+} def
+
+% k V gets HS from array if internal node; else returns 0
+/V { /k exch def k -1 eq { 0 } { HS k get } ifelse } def
+
+% calculate Horton-Strahler number (Knuth Vol. 4, p. 485)
+/FILL_HS {
+    0 S_PUSH
+    {   % postorder traversal and calculation
+        % we use only one stack; if the number N on the stack is greater
+        % than NUM_NODES, it indicates that node N is to be visited
+        /curr S_POP def
+
+        curr NUM_NODES lt {
+            /rchild RIGHT curr get def
+            /lchild LEFT curr get def
+            % push node again; next time it will be visited
+            curr NUM_NODES add S_PUSH
+            % push children: they will be dealt with first
+            rchild -1 ne {
+                rchild S_PUSH
+            } if
+            lchild -1 ne {
+                lchild S_PUSH
+            } if
+        } {
+            % visit node
+            /curr curr NUM_NODES sub def
+            /rchild RIGHT curr get def
+            /lchild LEFT curr get def
+            /vleft lchild V def
+            /vright rchild V def
+            /m vleft vright gt { vleft } { vright } ifelse def
+            /b vleft vright eq { 1 } { 0 } ifelse def
+            HS curr m b add put
+        } ifelse
+        STACK_SIZE 0 eq { exit } if
+    } loop
+} def
+
+% j k T calculate angle based on HS values of children
+/T {
+    /k exch def
+    /j exch def
+    j k eq {
+        30
+    } {
+        j k gt {
+            k 1 add j div 20 mul
+        } {
+            k j sub k div 30 mul
+        } ifelse
+    } ifelse
+} def
+
+% v RECT draws the correct shape for the HS number v
+/RECT {
+    /v exch def
+    v 0 eq {
+        newpath
+            0 0 moveto
+            3 SCALE 18 SCALE rlineto
+            6 SCALE neg 0 rlineto
+            0 0 lineto
+            gsave
+                1 1 1 setcolor fill
+            grestore
+        stroke
+    } {
+        /w 3 v add SCALE def
+        /h 18 v mul SCALE def
+        newpath
+            w 2 div neg 0 moveto
+            w 0 rlineto
+            0 h rlineto
+            w neg 0 rlineto
+            0 h neg rlineto
+            gsave
+                1 1 1 setcolor fill
+            grestore
+        stroke
+    } ifelse
+} def
+
+% draw tree
+/DRAW {
+    /STACK_SIZE 0 def  % reset stack from earlier
+    0 S_PUSH
+    {
+        /curr S_POP def
+        /curr_theta THETA curr get def
+        /curr_x XARR curr get def
+        /curr_y YARR curr get def
+        /lchild LEFT curr get def
+        /rchild RIGHT curr get def
+        /hyp curr V 18 mul SCALE def  % length of this branch
+        /new_x curr_x curr_theta sin hyp mul sub def   % new (x,y) coordinates (both children)
+        /new_y curr_y curr_theta cos hyp mul add def
+        /ltheta lchild V rchild V T curr_theta add def                % theta of left child
+        /rtheta rchild V lchild V T neg curr_theta add def            % theta of right child
+
+        % handle children: push internal nodes, draw external nodes immediately
+        lchild -1 ne {
+            THETA lchild ltheta put
+            XARR lchild new_x put
+            YARR lchild new_y put
+            lchild S_PUSH
+        } {
+            % print a leaf on the left
+            gsave
+                new_x new_y translate
+                ltheta rotate
+                0 RECT
+            grestore
+        } ifelse
+        rchild -1 ne {
+            THETA rchild rtheta put
+            XARR rchild new_x put
+            YARR rchild new_y put
+            rchild S_PUSH
+        } {
+            % print a leaf on the right
+            gsave
+                new_x new_y translate
+                rtheta rotate
+                0 RECT
+            grestore
+        } ifelse
+        gsave
+            curr_x curr_y translate
+            curr_theta rotate
+            curr V RECT
+        grestore
+        STACK_SIZE 0 eq { exit } if
+    } loop
+} def
+
+/RUN { FILL_HS DRAW } def
+
+% FOR TESTING
+/DEBUG_PRINT {
+    % arr label x y PRINT_ARR prints an array for debug
+    /Courier findfont 10 scalefont setfont
+    /PRINT_ARR {
+        moveto show (  ) show
+        /arr exch def
+        /len arr length def
+        /s 20 string def
+        0 1 len 1 sub {
+            /i exch def
+            arr i get s cvs show
+            ( ) show
+        } for
+    } def
+
+    THETA (THETA:) 50 540 PRINT_ARR
+    YARR (YARR:) 50 560 PRINT_ARR
+    XARR (XARR:) 50 580 PRINT_ARR
+    STACK (STACK:) 50 600 PRINT_ARR
+    HS (HS:) 50 620 PRINT_ARR
+    PARENT (PARENT:) 50 640 PRINT_ARR
+    RIGHT (RIGHT:) 50 660 PRINT_ARR
+    LEFT (LEFT:) 50 680 PRINT_ARR
+    KEY (KEY:) 50 700 PRINT_ARR
+    50 720 moveto (--- CONTENTS OF ARRAYS ---) show
+} def
