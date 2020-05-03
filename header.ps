@@ -91,7 +91,7 @@
 
 % calculate Horton-Strahler number (Knuth Vol. 4, p. 485)
 /FILL_HS {
-    0 S_PUSH
+    S_PUSH  % push the root
     {   % postorder traversal and calculation
         % we use only one stack; if the number N on the stack is greater
         % than NUM_NODES, it indicates that node N is to be visited
@@ -171,7 +171,7 @@
 % draw tree
 /DRAW {
     /STACK_SIZE 0 def  % reset stack from earlier
-    0 S_PUSH
+    S_PUSH             % push argument to function onto stack
     {
         /curr S_POP def
         /curr_theta THETA curr get def
@@ -221,7 +221,11 @@
     } loop
 } def
 
-/RUN { FILL_HS DRAW } def
+% kickstart drawing of tree
+/RUN {
+    /root exch def
+    root FILL_HS root DRAW
+} def
 
 % FOR TESTING
 /DEBUG_PRINT {

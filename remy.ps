@@ -1,0 +1,58 @@
+% Random Catalan tree
+%
+% Written by Marcel Goh on 3 May 2020.
+
+% NUM_NODES, RAND, and SCALE factor
+% change these to produce different trees
+200 18151995 0.4 INIT_PARAMS
+
+/L NUM_NODES 2 mul 1 add array def
+
+% initialise the links  (Remy's algorithm -- Knuth 4, pg. 457)
+/n 0 def
+L 0 0 put
+{
+    n NUM_NODES eq { exit } if
+    /X UNI 4 n mul 1 add mul cvi def  % random in [0 .. 4n + 1]
+    /n n 1 add def
+    /b X 2 mod def
+    /k X 2 div cvi def
+    L 2 n mul b sub 2 n mul put  % L[2n-b] <- 2n
+    L 2 n mul 1 sub b add L k get put  % L[2n-1+b] <- L[k]
+    L k 2 n mul 1 sub put  % L[k] <- 2n - 1
+} loop
+
+% build tree from link array
+/idx { 1 sub 2 div cvi } def  % gets the index from an odd number
+PARENT L 0 get idx -1 put  % set root:  PARENT[idx(L[0])] <- -1
+1 1 NUM_NODES {
+    /i exch def
+    /j i 1 sub def
+    /left L 2 i mul 1 sub get def
+    /right L 2 i mul get def
+
+    % fill LEFT, RIGHT, and PARENT arrays
+    left 2 mod 0 eq {
+        LEFT j -1 put
+    } {
+        LEFT j left idx put
+        PARENT left idx j put
+    } ifelse
+    right 2 mod 0 eq {
+        RIGHT j -1 put
+    } {
+        RIGHT j right idx put
+        PARENT right idx j put
+    } ifelse
+} for
+
+/rt L 0 get idx def
+XARR rt 300 put
+YARR rt 100 put
+THETA rt 0 put
+rt RUN
+
+DEBUG_PRINT
+L (L:) 50 520 PRINT_ARR
+
+showpage
