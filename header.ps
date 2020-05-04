@@ -1,5 +1,7 @@
-%!PS
-%%BoundingBox: [0 0 1 1]
+%!PS-Adobe-3.0 EPSF-3.0
+%%BoundingBox: 0 0 290 290
+%%HiResBoundingBox: 0 0 290 290
+
 % General-purpose header for drawing binary trees
 %
 % USE AS FOLLOWS:
@@ -227,6 +229,46 @@
     root FILL_HS root DRAW
 } def
 
+% make BST from KEYS array (0 is the root)
+/COLLISION false def
+/MAKE_BST {
+    PARENT 0 -1 put  % PARENT[root] <- nil (-1 indicates nil)
+    LEFT 0 -1 put    % ditto for LEFT, RIGHT
+    RIGHT 0 -1 put
+    1 1 NUM_NODES 1 sub {
+        /i exch def
+        /new_key KEY i get def
+        LEFT i -1 put
+        RIGHT i -1 put
+
+        /curr 0 def  % travelling pointer starts at root
+        /next 0 def
+        % descend the tree
+        {
+            new_key KEY curr get eq {  % check for equal keys
+                /COLLISION true def
+            } if
+            /go_left new_key KEY curr get lt def
+            go_left {
+                /next LEFT curr get def
+            } {
+                /next RIGHT curr get def
+            } ifelse
+            next -1 eq {
+                % new leaf inserts here
+                go_left {
+                    LEFT curr i put
+                } {
+                    RIGHT curr i put
+                } ifelse
+                PARENT i curr put
+                exit
+            } if
+            /curr next def
+        } loop
+    } for
+} def
+
 % FOR TESTING
 /DEBUG_PRINT {
     % arr label x y PRINT_ARR prints an array for debug
@@ -243,6 +285,8 @@
         } for
     } def
 
+    50 500 moveto (ENCOUNTERED EQUAL KEYS: ) show
+        COLLISION { (TRUE) } { (FALSE) } ifelse show
     THETA (THETA:) 50 540 PRINT_ARR
     YARR (YARR:) 50 560 PRINT_ARR
     XARR (XARR:) 50 580 PRINT_ARR

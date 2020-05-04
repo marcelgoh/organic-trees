@@ -1,0 +1,32 @@
+\input fontmac
+\input mathmac
+
+\input epsf
+
+\def\shift{\hskip -72 pt}
+\def\tree#1#2{
+  \vbox{
+  $$\epsfbox{#1.ps}$$
+  \centerline{#2}
+  }
+}
+
+\maketitle{Weyl trees of famous irrational numbers}{by}{Marcel K. Goh}{3 May 2020}
+
+These trees were created by inserting the sequence $\{\theta\}, \{2\theta\}, \{3\theta\},\ldots$ into a binary search tree, where $\theta$ is an irrational number and $\{x\}$ denotes the fractional part of $x$. For example, $\{\pi\} = \{0.14159\ldots\}$. External nodes are drawn as small isoceles triangles and internal nodes are drawn as rectangles. The size and angle of a given rectangle are proportional to the Horton-Strahler number of the corresponding node.
+
+If $\theta$ is irrational, the sequence $(n\theta)$ is not periodic. However, due to PostScript's floating-point representation of real numbers, this is not true in our program. We have kept the number of nodes small enough so that this does not affect the drawings.
+
+\vskip -140pt
+\tree{pi}{$\pi = 3.14159\,26536-$ (70 nodes)}
+\tree{e}{$e = 2.71828\,18285-$ (300 nodes)}
+\tree{einv}{$1/e = 0.36787\,94412-$ (300 nodes)}
+\tree{gamma}{$\gamma = 0.57721\,56649+$ (300 nodes), possibly not irrational}
+\tree{sqrt2}{$\sqrt 2 = 1.41421\,35624-$ (250 nodes)}
+\tree{sqrt3}{$\sqrt 3 = 1.73205\,08076-$ (200 nodes)}
+\tree{sqrt5}{$\sqrt 5 = 2.23606\,79775-$ (250 nodes)}
+\tree{sqrtpi}{$\sqrt\pi = \Gamma(1/2) = 1.77245\,38509+$ (200 nodes)}
+\tree{phi}{$\phi = 1.61803\,59887+$ (300 nodes)}
+\tree{ln2}{$\ln 2 = 0.69314\,71805+$ (250 nodes)}
+
+\bye

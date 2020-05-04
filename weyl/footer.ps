@@ -1,0 +1,17 @@
+0 1 NUM_NODES 1 sub {
+    /i exch def
+    /acc acc irrat add def
+    KEY i acc acc cvi sub put
+} for
+
+MAKE_BST
+
+% initialise root and run
+XARR 0 145 put
+YARR 0 5 put
+THETA 0 0 put
+0 RUN
+
+DEBUG_PRINT
+
+showpage

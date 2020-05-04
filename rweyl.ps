@@ -1,0 +1,35 @@
+% Random Weyl tree
+%
+% Written by Marcel Goh on 3 May 2020.
+
+% NUM_NODES, RAND, and SCALE factor
+% change these to produce different trees
+300 06011998 0.4 INIT_PARAMS
+
+/U UNI def
+
+/acc 0 def
+
+0 1 NUM_NODES 1 sub {
+    /i exch def
+    /acc acc U add def
+    KEY i acc acc cvi sub put
+} for
+
+%0 1 NUM_NODES 1 sub {
+%    /i exch def
+%    /u U i 1 add mul def
+%    KEY i u u cvi sub put
+%} for
+
+MAKE_BST
+
+% initialise root and run
+XARR 0 300 put
+YARR 0 100 put
+THETA 0 0 put
+0 RUN
+
+DEBUG_PRINT
+
+showpage

@@ -6,47 +6,17 @@
 % change these to produce different trees
 100 83144963 0.4 INIT_PARAMS
 
-% initialise root
-KEY 0 UNI put    % set KEY[root] <- new random number
-PARENT 0 -1 put  % PARENT[root] <- nil (-1 indicates nil)
-LEFT 0 -1 put    % ditto for LEFT, RIGHT
-RIGHT 0 -1 put
+0 1 NUM_NODES 1 sub {
+    /i exch def
+    KEY i UNI put
+} for
+
+MAKE_BST
+
+% initialise root and run
 XARR 0 300 put
 YARR 0 100 put
 THETA 0 0 put
-
-% insert nodes with random keys into BST
-1 1 NUM_NODES 1 sub {
-    /i exch def
-    /new_key UNI def
-    KEY i new_key put  % create new leaf node
-    LEFT i -1 put
-    RIGHT i -1 put
-
-    /curr 0 def  % travelling pointer starts at root
-    /next 0 def
-    % descend the tree
-    {
-        /go_left new_key KEY curr get lt def
-        go_left {
-            /next LEFT curr get def
-        } {
-            /next RIGHT curr get def
-        } ifelse
-        next -1 eq {
-            % new leaf inserts here
-            go_left {
-                LEFT curr i put
-            } {
-                RIGHT curr i put
-            } ifelse
-            PARENT i curr put
-            exit
-        } if
-        /curr next def
-    } loop
-} for
-
 0 RUN
 
 DEBUG_PRINT
